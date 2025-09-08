@@ -1,7 +1,14 @@
+from scapy.all import IP, TCP, UDP
+
+def analyze(packet):
+    if IP in packet:
+        ip_src = packet[IP].src
+        ip_dst = packet[IP].dst
+        proto = packet.proto
+        size = len(packet)
+        print(f"{ip_src} → {ip_dst} | Proto: {proto} | Size: {size}")
+
 traffic = {}
 
-def process_packet(packet):
-    ip = packet[0][1].src if packet.haslayer("IP") else None
-    size = len(packet)
-    if ip:
-        traffic[ip] = traffic.get(ip, 0) + size
+def update_traffic(ip, size):
+    traffic[ip] = traffic.get(ip, 0) + size
