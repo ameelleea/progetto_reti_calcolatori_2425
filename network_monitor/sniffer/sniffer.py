@@ -1,109 +1,129 @@
-from scapy.all import sniff, Ether, IP, TCP, UDP, ICMP
+from scapy.all import sniff, Ether, IP, TCP, UDP, ICMP, ARP
 from scapy.all import DNS, DNSQR, DNSRR
 import json
 import time
 from .socket_client import send_packet_data
+from .lib.constants import proto_dict
+from datetime import datetime
+
+OUTPUT_FILE = "dns_log.json"
+
+def save_to_json(entry):
+    """Salva un dict con timestamp in un file JSON"""
+    try:
+        # se esiste già il file, carica i dati
+        with open(OUTPUT_FILE, "r") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # se non esiste o è vuoto, inizia da una lista vuota
+        data = []
+
+    # aggiunge un timestamp ISO
+    entry_with_time = {
+        "timestamp": datetime.now().isoformat(),
+        **entry
+    }
+
+    # aggiungi il nuovo record
+    data.append(entry_with_time)
+
+    # riscrivi il file
+    with open(OUTPUT_FILE, "w") as f:
+        json.dump(data, f, indent=4)
 
 # --- Dati traffico ---
 traffic = {}  # traffico totale per IP
 traffic_proto = {}  # traffico per IP e protocollo
 traffic_io = {}  # traffico in/out per host
 
-# --- Funzione di analisi ---
-def analyze(packet):
-    info = {}
-    if IP in packet:
-        ip_src = packet[IP].src
-        ip_dst = packet[IP].dst
-        proto = packet[IP].proto
-        size = len(packet)
-
-        # --- Protocollo dettagliato ---
-        if proto == 6:  # TCP
-            proto_name = "TCP"
-            sport = packet[TCP].sport
-            dport = packet[TCP].dport
-        elif proto == 17:  # UDP
-            proto_name = "UDP"
-            sport = packet[UDP].sport
-            dport = packet[UDP].dport
-        elif proto == 1:  # ICMP
-            proto_name = "ICMP"
-            sport = dport = None
-        else:
-            proto_name = str(proto)
-            sport = dport = None
-
-        # --- Statistiche per IP e protocollo ---
-        traffic[ip_src] = traffic.get(ip_src, 0) + size
-        traffic_proto.setdefault(ip_src, {})
-        traffic_proto[ip_src][proto_name] = traffic_proto[ip_src].get(proto_name, 0) + size
-
-        # --- Traffico in/out per host ---
-        traffic_io.setdefault(ip_src, {"out":0, "in":0})
-        traffic_io.setdefault(ip_dst, {"out":0, "in":0})
-        traffic_io[ip_src]["out"] += size
-        traffic_io[ip_dst]["in"] += size
-
-        info = {
-            "src": ip_src,
-            "dst": ip_dst,
-            "sport": sport,
-            "dport": dport,
-            "proto": proto_name,
-            "size": size
-        }
-    return info
-
-def analyze_dns(packet):
-    if packet.haslayer(DNS):
-        dns_layer = packet[DNS]
-        # Query (richiesta)
-        if dns_layer.qr == 0:
-            query_name = dns_layer.qd.qname.decode()  # dominio richiesto
-            print(f"DNS Query: {query_name}")
-        # Risposta
-        elif dns_layer.qr == 1:
-            for i in range(dns_layer.ancount):
-                answer = dns_layer.an[i].rrname.decode()
-                ip = dns_layer.an[i].rdata
-                print(f"DNS Response: {answer} → {ip}")
-
-
-
+# --- Funzioni di analisi ---
 def analyze_network(packet):
+    info = {}
+
+    info["timestamp"] = datetime.now().isoformat()
+    # --- Livello di rete ---
     if IP in packet:
+        info["network_proto"] = "IP"
         ip_src = packet[IP].src
         ip_dst = packet[IP].dst
         ttl = packet[IP].ttl
         proto = packet[IP].proto
+        proto_name = proto_dict[proto]
+        size = len(packet)
         mac_src = packet[Ether].src if Ether in packet else None
         mac_dst = packet[Ether].dst if Ether in packet else None
-        print(f"{ip_src}({mac_src}) → {ip_dst}({mac_dst}) | TTL={ttl} | Proto={proto}")
+        info["src"] = ip_src
+        info["dst"] = ip_dst
+        info["size"] = size
+        info["proto_name"] = proto_name
+        info["mac_src"] = mac_src
+        info["mac_dst"] = mac_dst
+        info["ttl"] = ttl
+        
+            # --- ARP ---
+    if ARP in packet:
+        info["network_proto"] = "ARP"
+        arp_layer = packet[ARP]
+        info["arp_op"] = "who-has" if arp_layer.op == 1 else "is-at"
+        info["arp_psrc"] = arp_layer.psrc
+        info["arp_pdst"] = arp_layer.pdst
+        info["arp_hwsrc"] = arp_layer.hwsrc
+        info["arp_hwdst"] = arp_layer.hwdst
 
+    # --- ICMP ---
+    if ICMP in packet:
+        info["network_proto"] = "ARP"
+        icmp_layer = packet[ICMP]
+        info["icmp_type"] = icmp_layer.type
+        info["icmp_code"] = icmp_layer.code
+        info["icmp_size"] = len(packet)
 
+    # --- Statistiche per IP e protocollo ---
+    traffic[ip_src] = traffic.get(ip_src, 0) + size
+    traffic_proto.setdefault(ip_src, {})
+    traffic_proto[ip_src][proto_name] = traffic_proto[ip_src].get(proto_name, 0) + size
 
-def analyze_transport(packet):
+    # --- Traffico in/out per host ---
+    traffic_io.setdefault(ip_src, {"out":0, "in":0})
+    traffic_io.setdefault(ip_dst, {"out":0, "in":0})
+    traffic_io[ip_src]["out"] += size
+    traffic_io[ip_dst]["in"] += size
+
+    # --- Livello di trasporto ---
     if TCP in packet:
         sport = packet[TCP].sport
         dport = packet[TCP].dport
         flags = packet[TCP].flags
         size = len(packet)
-        print(f"TCP {sport} → {dport} | Flags={flags} | Size={size}")
+        info["sport"] = sport
+        info["dport"] = dport
+        info["flags"] = str(flags)
+        info["size"] = size
+
     elif UDP in packet:
         sport = packet[UDP].sport
         dport = packet[UDP].dport
         size = len(packet)
-        print(f"UDP {sport} → {dport} | Size={size}")
+        #print(f"UDP {sport} → {dport} | Size={size}")
+        info["sport"] = sport
+        info["dport"] = dport
+        info["size"] = size
 
-
-
-def analyze_application(packet):
-    if DNS in packet and packet[DNS].qr == 0:  # query DNS
-        domain = packet[DNSQR].qname.decode()
-        print(f"DNS query: {domain}")
-
-traffic = {}
+    # --- Livello applicazione ---
+    if packet.haslayer(DNS):
+        dns_layer = packet[DNS]
+        # Query (richiesta)
+        if dns_layer.qr == 0:
+            query_name = dns_layer.qd.qname.decode()  # dominio richiesto
+            info["dnsquery"] = query_name
+            info["dnsquerytype"] = "Query"
+        # Risposta
+        elif dns_layer.qr == 1:
+            for i in range(dns_layer.ancount):
+                answer = dns_layer.an[i].rrname.decode()
+                info["dnsquery"] = answer
+    save_to_json(info)
+    return info
 
 def update_stats(ip, size, direction):
     if ip not in traffic:
@@ -114,7 +134,7 @@ top_ips = sorted(traffic.items(), key=lambda x: x[1]['in']+x[1]['out'], reverse=
 
 # --- Callback per ogni pacchetto ---
 def packet_callback(packet):
-    info = analyze(packet)
+    """info = analyze(packet)
     if info:
         print(f"{info['src']}:{info['sport']} → {info['dst']}:{info['dport']} | "
               f"{info['proto']} | {info['size']} bytes")
@@ -137,7 +157,9 @@ def packet_callback(packet):
     if packet.haslayer(DNS):
         analyze_dns(packet)
     
-    send_packet_data(info)
+    send_packet_data(info)"""
+    print("Network data: ", analyze_network(packet))
+    
 
 # --- Avvio sniffer ---
 def start_sniffer():

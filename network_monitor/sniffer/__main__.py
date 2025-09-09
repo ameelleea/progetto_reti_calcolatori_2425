@@ -14,7 +14,7 @@ def main():
     config_host(args.host)
     config_port(args.port)
     try:
-        start_socket()
+        #start_socket()
         start_sniffer()
     except Exception as e:
         print(e)
