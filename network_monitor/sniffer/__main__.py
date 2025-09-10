@@ -1,5 +1,5 @@
 from .lib.config import config_host, config_port
-from .socket_client import start_socket
+from .socket_client import start_socket, close_socket
 from .sniffer import start_sniffer
 import argparse
 
@@ -14,12 +14,12 @@ def main():
     config_host(args.host)
     config_port(args.port)
     try:
-        #start_socket()
+        start_socket()
         start_sniffer()
+        close_socket()
     except Exception as e:
         print(e)
-    
-    pass
+        close_socket()
 
 if __name__ == "__main__":
     main()

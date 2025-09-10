@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+    <head>
+        <meta charset="UTF-8">
+        <title>Network Monitor</title>
+        <link rel="stylesheet" href="style.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+        <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    </head>
+    <body>
+        <h1>Network Monitor</h1>
+        <div id="charts-container">
+            <canvas id="ipchart" width="400" height="200"></canvas>
+            <canvas id="iochart" width="400" height="200"></canvas>
+            <canvas id="protochart" width="400" height="200"></canvas>
+        </div>
+
+        <table id="myTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Protocollo Rete</th>     
+                    <th>IP Sorgente</th> 
+                    <th>IP Destinazione</th> 
+                    <th>Dimensione</th>     
+                    <th>Protocollo Trasporto</th>
+                    <th>MAC Sorgente</th> 
+                    <th>MAC Destinazione</th>    
+                    <th>sport</th> 
+                    <th>dport</th> 
+                    <th>Flags</th>
+                    <th>DNS Query</th> 
+                    <th>DNS Query Type</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+        <script src="script.js"></script>
+    </body>
+</html>

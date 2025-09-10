@@ -10,8 +10,28 @@ def start_socket():
     except Exception as e:
         raise ConnectionRefusedException
 
-def send_packet_data(data):
+def close_socket():
+    sio.disconnect()
+
+def send_traffic_data(dest, data):
     """
+    dest: evento websocket al quale inviare i dati
     data: dict con le informazioni da inviare
     """
-    sio.emit('packet', data)
+    sio.emit(dest, data)
+
+def send_security_alert(dest, message):
+    sio.emit(dest, message)
+
+@sio.event
+def connect():
+    print("Connesso al server WebSocket!")
+
+@sio.event
+def disconnect():
+    print("Disconnesso dal server.")
+
+# Connessione al server Node
+#sio.connect("http://localhost:3000")
+
+

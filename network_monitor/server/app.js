@@ -1,36 +1,50 @@
-const express = require("express");
-const fs = require("fs");
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const path = require("path");
-const { json } = require("body-parser");
 
 const app = express();
 const PORT = 3000;
-
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
-
-io.on("connection", (socket) => {
-  console.log("Client connesso via WS");
+const io = new Server(server, {
+    cors: {
+        origin: "*"
+    }
 });
 
-server.listen(3000, () => console.log("WS server listening on port 3000"));
+// Quando un client si connette
+io.on('connection', (socket) => {
+    console.log('Un client si è connesso:', socket.id);
 
-// --- API ---
-app.get('/traffico', (req, res) => {
-  fs.readFile('../sniffer/traffic.json', (err, data) => {
-    if (err) return res.status(500).send("Errore nel leggere i dati");
-    res.json(JSON.parse(data));
-  });
+    // Riceve dati dal Python e li rilancia ai client
+    socket.on('packet_log_data', (data) => {
+        io.emit('packet_log_listener', data);
+    });
+
+    socket.on('ip_log_data', (data) => {
+        io.emit('ip_log_listener', data);
+        console.log(data);
+    });
+
+    socket.on('protocol_traffic_data', (data) => {
+        io.emit('protocol_traffic_listener', data);
+    });
+
+    socket.on('io_traffic_data', (data) => {
+        io.emit('io_traffic_listener', data);
+    });
+
+    socket.on('security_alert_listener', (data) => {
+        io.emit('security_alert_notifier', data);
+    });
+
+    socket.on('disconnect', (reason) => {
+        console.log(`Client ${socket.id} si è disconnesso. Motivo: ${reason}`);
+    });
 });
 
-// Avvia server
-app.listen(PORT, () => {
-  console.log(`Server avviato sulla porta ${PORT}`);
+
+server.listen(3000, () => {
+    console.log(`Server WebSocket attivo su http://localhost:${PORT}`);
 });
