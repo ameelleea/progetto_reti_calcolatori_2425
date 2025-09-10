@@ -43,9 +43,15 @@ socket.on("ip_log_listener", (data) => {
 
 socket.on("protocol_traffic_listener", (data) => {
     traffic_by_protocol = data;
-    protochart.data.labels = Object.keys(traffic_by_protocol);
-    protochart.data.datasets[0].data = Object.values(traffic_by_protocol);
-    protochart.update();
+    aggiornaGrafico(traffic_by_protocol, colors, bordercolors)
+    //protochart.data.labels = Object.keys(traffic_by_protocol);
+    //protochart.data.datasets[0].data = Object.values(traffic_by_protocol);
+    //protochart.update();
+});
+
+socket.on('security_alert_notifier', (data) => {
+    let alert_message = document.getElementById('alert-box').querySelector('span');
+    alert_message.innerHTML = data;
 });
 
 socket.on("io_traffic_listener", (data) => {
@@ -86,8 +92,8 @@ Chart.defaults.font.size = 14; // dimensione in px
 //Chart.defaults.font.style = 'bold'; // stile: normal, bold, italic
 Chart.defaults.color = '#333'; // colore testo globale
 
-bordercolors = ['#F25E86', '#F2B366', '#F2AA6B', '#F28972', '#F27777']
-colors = ['#f25e8594', '#f2b36694', '#f2aa6b98', '#f289728f', '#f2777798']
+bordercolors = ['#84A98C', '#52796F', '#354F52', '#2F3E46', '#CAD2C5']
+colors = ['#84a98c94', '#52796f86', '#354f5291', '#2f3e468f', '#cad2c5c7']
 const ipchartEl = document.getElementById('ipchart').getContext('2d');
 const iochartEl = document.getElementById('iochart').getContext('2d');
 const protochartEl = document.getElementById('protochart').getContext('2d');
@@ -108,10 +114,10 @@ const ipchart = new Chart(ipchartEl, {
         responsive: false,
         scales: {
         x: {
-            title: { display: true, text: 'Indirizzo IP' }
+            title: { display: true, text: 'Indirizzo IP', font: {weight: 'bold'} }
         },
         y: {
-            title: { display: true, text: 'Traffico (Kb)' }
+            title: { display: true, text: 'Traffico (Kb)', font: {weight: 'bold'} }
         }
     }
 }
@@ -119,62 +125,114 @@ const ipchart = new Chart(ipchartEl, {
 
 const iochart = new Chart(iochartEl, {
     type: 'line',
-        data: {
-            labels: Array.from({ length: 13 }, (_, i) => 0 + i * 120),
-            datasets: [{
-                label: "OUT",
-                data: io_traffic["out"],
-                borderColor: colors[0],
-                backgroundColor: colors[0], // area sotto linea trasparente
-                fill: true,
-                tension: 0.3
-            },{
-                label: "IN",
-                data: io_traffic["in"],
-                borderColor: colors[1],
-                backgroundColor: colors[1].replace('1)', '0.2)'), // area sotto linea trasparente
-                fill: true,
-                tension: 0.3
-            }]
+    data: {
+        labels: Array.from({ length: 13 }, (_, i) => 0 + i * 120),
+        datasets: [{
+            label: "OUT",
+            data: io_traffic["out"],
+            borderColor: colors[3],
+            borderWidth: 3,   // linea più spessa
+            fill: false,
+            tension: 0.2,
+            pointRadius: 0,
+            pointHoverRadius: 0
+        },{
+            label: "IN",
+            data: io_traffic["in"],
+            borderColor: colors[1],
+            borderWidth: 3,
+            fill: false,
+            tension: 0.2,
+            pointRadius: 0,
+            pointHoverRadius: 0
+        }]
+    },
+    options: {
+        responsive: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    usePointStyle: false, // fa vedere la linea
+                    boxWidth: 40,
+                    boxHeight: 2
+                }
+            }
         },
-        options: {
-            responsive: false,
-            plugins: {
-                legend: { position: 'top' }
-            },
-            scales: {
+        scales: {
             x: {
                 min: 0,
                 max: 60,
-                type: 'linear', // importante per valori numerici
-                title: { display: true, text: 'Tempo (sec)' }
+                type: 'linear',
+                title: {
+                    display: true,
+                    text: 'Tempo (sec)',
+                    font: {
+                        weight: 'bold',
+                }
             },
             y: {
-                title: { display: true, text: 'Traffico (Kb)' }
+                title: { display: true, text: 'Traffico (Kb)', font: {weight: 'bold'}}
+            }
             }
         }
-        }
+    }
 });
 
+function aggiornaGrafico(dati, colori, bordi) {
+    protochart.data.labels = Object.keys(dati);
+    protochart.data.datasets[0].data = Object.values(dati);
+    protochart.data.datasets[0].backgroundColor = colori;
+    protochart.data.datasets[0].borderColor = bordi;
+
+    // mostra legenda e datalabels
+    protochart.options.plugins.legend.display = true;
+    protochart.options.plugins.datalabels.display = true;
+
+    // datalabels solo percentuali
+    protochart.options.plugins.datalabels.formatter = (value, context) => {
+        const data = context.chart.data.datasets[0].data;
+        const total = data.reduce((sum, val) => sum + val, 0);
+        const percentage = ((value / total) * 100).toFixed(0);
+        return `${percentage}%`;
+    };
+
+    protochart.update();
+}
+
+
+// inizializzazione grafico "vuoto"
 const protochart = new Chart(protochartEl, {
-    type: 'pie', // tipologia di grafico: bar, line, pie, etc.
+    type: 'pie',
     data: {
-        labels: Object.keys(traffic_by_protocol), // etichette sull'asse X
+        labels: [], // nessuna etichetta all'inizio
         datasets: [{
             label: 'Traffico (byte)',
-            data: Object.values(traffic_by_protocol), // valori sull'asse Y
-            backgroundColor: colors,
-            borderColor: bordercolors,
+            data: [1], // un solo valore per fare un cerchio pieno
+            backgroundColor: colors[0], // colore grigio chiaro
+            borderColor: bordercolors[0],
             borderWidth: 1
         }]
     },
     options: {
         responsive: false,
+        plugins: {
+            legend: {
+                display: false // nascondiamo la legenda inizialmente
+            },
+            datalabels: {
+                display: false // niente etichette inizialmente
+            }
+        },
         scales: {
-            y: { beginAtZero: true }
+            y: { display: false },
+            x: { display: false }
         }
-    }
+    },
+    plugins: [ChartDataLabels]
 });
+
+
 
 let table = $('#myTable').DataTable({
     pageLength: 10,

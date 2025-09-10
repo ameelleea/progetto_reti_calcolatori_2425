@@ -24,7 +24,6 @@ io.on('connection', (socket) => {
 
     socket.on('ip_log_data', (data) => {
         io.emit('ip_log_listener', data);
-        console.log(data);
     });
 
     socket.on('protocol_traffic_data', (data) => {
@@ -36,6 +35,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('security_alert_listener', (data) => {
+        console.log(data);
         io.emit('security_alert_notifier', data);
     });
 

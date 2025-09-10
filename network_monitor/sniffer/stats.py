@@ -1,25 +1,6 @@
 from collections import defaultdict
 import json
 
-with open("dns_log.json") as f:
-    packets = json.load(f)
-
-traffic_per_ip = defaultdict(int)
-for p in packets:
-    traffic_per_ip[p["src"]] += p["size"]
-    traffic_per_ip[p["dst"]] += p["size"]
-
-print(traffic_per_ip)
-
-traffic_proto = defaultdict(lambda: defaultdict(int))
-
-for p in packets:
-    proto = p.get("proto_name", "UNKNOWN")
-    src = p["src"]
-    traffic_proto[src][proto] += p["size"]
-
-print(traffic_proto)
-
 from collections import Counter
 
 sport_counter = Counter()

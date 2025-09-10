@@ -7,7 +7,7 @@ start_time = 0
 
 def packet_callback(pkt):
     try:
-        #process_ip_packet(pkt, start_time)
+        process_ip_packet(pkt, start_time)
         run_security_scan(pkt)
     except Exception as e:
         print("Errore: sniffer line 12, ", e)

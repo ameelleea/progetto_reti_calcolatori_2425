@@ -1,8 +1,4 @@
 | Tipo              | Cosa mostra                                           | Libreria / Widget suggerito |
 | ----------------- | ----------------------------------------------------- | --------------------------- |
-| Grafico a barre   | Traffico totale per IP o MAC                          | Chart.js, Plotly, Recharts  |
-| Grafico a torta   | Percentuale di protocolli                             | Chart.js / Pie chart        |
-| Line chart / area | Traffico in/out nel tempo                             | Chart.js, Plotly            |
-| Tabella live      | Elenco pacchetti con timestamp, src, dst, port, flags | DataTables, Tabulator       |
 | Mappa             | Geolocalizzazione IP sorgente/destinazione            | Leaflet.js, Mapbox          |
 | Log eventi        | DNS query e risposte, ICMP, ARP                       | Semplice lista scrollabile  |
