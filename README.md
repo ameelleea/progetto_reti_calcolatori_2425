@@ -20,7 +20,7 @@ It also includes an interactive script to launch attacks one by one or all toget
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-username>/network-monitor.git
+git clone https://github.com/ameelleea/network_monitor.git
 cd network-monitor/network_monitor
 ```
 All following commands should be run from the network_monitor directory.
