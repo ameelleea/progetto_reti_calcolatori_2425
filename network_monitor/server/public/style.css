@@ -21,9 +21,9 @@ header h1 {
 }
 
 #alert-box {
-    background-color: #CAD2C5;
+    background-color: #bb2c2c;
     border-radius: 10px;
-    color: #785451;
+    color: white;
     font-weight: bold;
     font-size: 1.5rem;
     padding: 1rem;

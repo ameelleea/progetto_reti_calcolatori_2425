@@ -1,6 +1,6 @@
 import time
-from scapy.all import Ether, IP, TCP, UDP
-from scapy.all import DNS
+from scapy.all import Ether, IP, TCP, UDP, DNS
+import socket 
 from datetime import datetime
 
 from .socket_client import send_traffic_data
@@ -9,17 +9,47 @@ from .lib.config import get_local_ip
 
 LOCAL_IP = get_local_ip()
 
+buffer = []
+
 # --- Dati traffico ---
 traffic = {}  # traffico totale per IP
 traffic_proto = {}  # traffico per IP e protocollo
 traffic_io = {"out": {0: 0}, "in": {0: 0}}  # traffico in/out per host
 top_ips = {}
 
+# --- Trova tutti gli IP locali ---
+def get_local_ips():
+    local_ips = set()
+    
+    # Ottieni hostname della macchina
+    hostname = socket.gethostname()
+    
+    # Risolvi tutti gli IP associati all'hostname
+    try:
+        _, _, ip_list = socket.gethostbyname_ex(hostname)
+        for ip in ip_list:
+            local_ips.add(ip)
+    except socket.gaierror:
+        pass
+    
+    # Per avere almeno l’IP sulla interfaccia di default (connessione a Internet)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # non invia pacchetti
+        local_ips.add(s.getsockname()[0])
+        s.close()
+    except Exception:
+        pass
+
+    return local_ips
+
+local_ips = get_local_ips()
+
 # --- Funzioni di analisi ---
 def process_ip_packet(packet, start_time):
     # --- Livello di rete ---
     # --- IP ---
-    print(packet.summary())
+    #print(packet.summary())
     if IP in packet:
         info = {
             "timestamp": datetime.now().isoformat(),
@@ -85,10 +115,14 @@ def process_ip_packet(packet, start_time):
                     answer = dns_layer.an[i].rrname.decode()
                     info["dnsquery"] = answer
 
-        send_traffic_data("packet_log_data", info)
-        send_traffic_data("ip_log_data", top_ips)
-        send_traffic_data("protocol_traffic_data", traffic_proto)
-        send_traffic_data("io_traffic_data", traffic_io)
+        buffer.append(info)
+        if len(buffer) >= 5:  # invia ogni 5 pacchetti
+            send_traffic_data("packet_log_data", buffer)
+            send_traffic_data("ip_log_data", top_ips)
+            send_traffic_data("protocol_traffic_data", traffic_proto)
+            send_traffic_data("io_traffic_data", traffic_io)
+            buffer.clear()
+
 
 def update_stats(ip_src, ip_dst, size, proto_name, start_time):
     # --- Statistiche per IP e protocollo ---
@@ -98,6 +132,28 @@ def update_stats(ip_src, ip_dst, size, proto_name, start_time):
     # --- Traffico in/out per host ---
     elapsed = time.time() - start_time
 
+    if ip_dst.startswith("224.") or ip_dst == "255.255.255.255":
+        pass
+
+    if ip_src in local_ips:
+        # out
+        lastkey = next(reversed(traffic_io["out"]))
+        traffic_io["out"][elapsed] = traffic_io["out"][lastkey] + size
+
+    elif ip_dst in local_ips:
+        # in
+        lastkey = next(reversed(traffic_io["in"]))
+        traffic_io["in"][elapsed] = traffic_io["in"][lastkey] + size
+
+    else:
+        print(f"Direction unknown: {ip_src} -> {ip_dst}")
+        pass
+
+    global top_ips
+    top_ips = dict(sorted(traffic.items(), key=lambda x: x[1], reverse=True)[:5])
+
+
+'''
     if(ip_src == LOCAL_IP):
         lastkey = next(reversed(traffic_io["out"]))
         newsize = (traffic_io['out'][lastkey] + size)
@@ -108,11 +164,7 @@ def update_stats(ip_src, ip_dst, size, proto_name, start_time):
         traffic_io["in"][elapsed] = newsize
     else:
         print("Direction unkown.")
-
-    global top_ips
-    top_ips = dict(sorted(traffic.items(), key=lambda x: x[1], reverse=True)[:5])
-
-
-
+        # Ignora broadcast/multicast
+'''
 
 

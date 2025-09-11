@@ -8,6 +8,8 @@ let traffic_by_ip = {}
 let traffic_by_protocol = {}
 let io_traffic = {}
 let iodatasets = {};
+let alerts_queue = [];
+let alert_active = false;
 
 //Setting grafici
 Chart.defaults.font.family = "'Roboto Condensed', sans-serif";
@@ -23,11 +25,19 @@ function showAlert(message) {
     alertBox.innerHTML = message;
     alertBox.style.opacity = '1';
     alertBox.style.transform = 'translateY(0)';
-    
+    alert_active = true;
+
     setTimeout(() => {
         alertBox.style.opacity = '0';
         alertBox.style.transform = 'translateY(-10px)';
-    }, 10000);
+        setTimeout(() => {
+            alert_active = false;
+            // Mostra il prossimo alert se ce n'è in coda
+            if (alerts_queue.length > 0) {
+                showAlert(alerts_queue.shift());
+            }
+        }, 500); // piccola pausa per finire l’animazione
+    }, 5000); // durata visibilità alert
 }
 
 function aggiornaGrafico(dati, colori, bordi) {
@@ -53,9 +63,10 @@ function aggiornaGrafico(dati, colori, bordi) {
 
 //WebSocket
 socket.on("packet_log_listener", (data) => {
-    let newData = Object.keys(data).map(key => data[key]);
-    table.row.add(newData).draw(false); 
-
+    for(let i=0; i< data.length; i++){
+        let newData = Object.keys(data[i]).map(key => data[i][key]);
+        table.row.add(newData).draw(false); 
+    }
 });
 
 socket.on("ip_log_listener", (data) => {
@@ -64,7 +75,6 @@ socket.on("ip_log_listener", (data) => {
     let newLabels = []
     let newData = []
 
-    console.log(newLabels)
     for(let i=0; i <5; i++){
         if(Object.keys(traffic_by_ip)[i] !== undefined){
             newLabels[i] = Object.keys(traffic_by_ip)[i]
@@ -76,9 +86,7 @@ socket.on("ip_log_listener", (data) => {
     }
 
     const max = Math.max(...newData);
-    console.log(max)
     const normalizedData = newData.map(v => v/(1024*1024));
-    console.log(newLabels)
     ipchart.data.labels = newLabels
     ipchart.data.datasets[0].data = normalizedData;
     ipchart.update();
@@ -91,7 +99,11 @@ socket.on("protocol_traffic_listener", (data) => {
 });
 
 socket.on('security_alert_notifier', (data) => {
-    showAlert(data);
+    alerts_queue.push(data);
+    // Se non c’è alert in corso, mostralo subito
+    if (!alert_active) {
+        showAlert(alerts_queue.shift());
+    }
 });
 
 socket.on("io_traffic_listener", (data) => {

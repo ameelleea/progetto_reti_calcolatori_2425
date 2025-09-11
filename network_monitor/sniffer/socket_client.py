@@ -1,5 +1,6 @@
 import socketio
 import time
+from datetime import datetime
 import sys
 from .lib.config import HOST, PORT
 
@@ -43,7 +44,10 @@ def send_traffic_data(dest, data):
     sio.emit(dest, data)
 
 def send_security_alert(dest, message):
-    sio.emit(dest, message)
+    timestamp = datetime.now().isoformat()
+    fullmessage = "[" + timestamp + "] " + message
+    print(fullmessage)
+    sio.emit(dest, fullmessage)
 
 @sio.event
 def connect():
