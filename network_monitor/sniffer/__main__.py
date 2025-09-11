@@ -3,7 +3,6 @@ from .socket_client import start_socket, close_socket
 from .sniffer import start_sniffer
 from scapy.all import conf
 import argparse
-import threading
 
 def main():
 
@@ -17,6 +16,7 @@ def main():
 
     config_host(args.host)
     config_port(args.port)
+
     try:
         start_socket()
         start_sniffer(iface=args.iface)

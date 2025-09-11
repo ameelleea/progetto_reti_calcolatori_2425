@@ -1,7 +1,23 @@
 #!/bin/bash
 
-# Path allo script Python dei demo attacchi
-DEMO_SCRIPT="./demo_attack/demo_attack.py"
+# Percorso al venv del progetto
+VENV_PATH="./venv"
+
+# Percorso allo script Python dei demo attacchi
+DEMO_SCRIPT="./demo_attack/demo_attack_simulator.py"
+
+# Funzione per attivare il venv
+activate_venv() {
+    if [ ! -f "$VENV_PATH/bin/activate" ]; then
+        echo "[INFO] Virtual environment non trovato, lo creo..."
+        python3 -m venv "$VENV_PATH"
+        source "$VENV_PATH/bin/activate"
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    else
+        source "$VENV_PATH/bin/activate"
+    fi
+}
 
 # Funzione per stampare il menu
 show_menu() {
@@ -20,21 +36,27 @@ show_menu() {
     echo "=============================="
 }
 
+# Attivo il venv
+activate_venv
+
+# Loop menu
 while true; do
     show_menu
     read -p "Seleziona un attacco (0-8): " choice
     case $choice in
-        1) python3 "$DEMO_SCRIPT" arp ;;
-        2) python3 "$DEMO_SCRIPT" syn ;;
-        3) python3 "$DEMO_SCRIPT" icmp ;;
-        4) python3 "$DEMO_SCRIPT" tcpreset ;;
-        5) python3 "$DEMO_SCRIPT" udp ;;
-        6) python3 "$DEMO_SCRIPT" dns ;;
-        7) python3 "$DEMO_SCRIPT" ddos ;;
-        8) python3 "$DEMO_SCRIPT" all ;;
+        1) python "$DEMO_SCRIPT" arp ;;
+        2) python "$DEMO_SCRIPT" syn ;;
+        3) python "$DEMO_SCRIPT" icmp ;;
+        4) python "$DEMO_SCRIPT" tcpreset ;;
+        5) python "$DEMO_SCRIPT" udp ;;
+        6) python "$DEMO_SCRIPT" dns ;;
+        7) python "$DEMO_SCRIPT" ddos ;;
+        8) python "$DEMO_SCRIPT" all ;;
         0) echo "Uscita."; break ;;
         *) echo "Scelta non valida, riprova." ;;
     esac
     echo "Premi INVIO per continuare..."
     read
 done
+
+

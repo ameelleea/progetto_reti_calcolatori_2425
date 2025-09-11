@@ -1,19 +1,64 @@
+//Costanti
 const socket = io("http://localhost:3000");
+const ipchartEl = document.getElementById('ipchart').getContext('2d');
+const iochartEl = document.getElementById('iochart').getContext('2d');
+const protochartEl = document.getElementById('protochart').getContext('2d');
+
 let traffic_by_ip = {}
 let traffic_by_protocol = {}
 let io_traffic = {}
 let iodatasets = {};
 
+//Setting grafici
+Chart.defaults.font.family = "'Roboto Condensed', sans-serif";
+Chart.defaults.font.size = 14; 
+Chart.defaults.color = '#333'; 
+bordercolors = ['#84A98C', '#52796F', '#354F52', '#2F3E46', '#CAD2C5']
+colors = ['#84a98c94', '#52796f86', '#354f5291', '#2f3e468f', '#cad2c5c7']
+
+
+//Funzioni di utility
+function showAlert(message) {
+    const alertBox = document.getElementById('alert-box');
+    alertBox.innerHTML = message;
+    alertBox.style.opacity = '1';
+    alertBox.style.transform = 'translateY(0)';
+    
+    setTimeout(() => {
+        alertBox.style.opacity = '0';
+        alertBox.style.transform = 'translateY(-10px)';
+    }, 10000);
+}
+
+function aggiornaGrafico(dati, colori, bordi) {
+    protochart.data.labels = Object.keys(dati);
+    protochart.data.datasets[0].data = Object.values(dati);
+    protochart.data.datasets[0].backgroundColor = colori;
+    protochart.data.datasets[0].borderColor = bordi;
+
+    // mostra legenda e datalabels
+    protochart.options.plugins.legend.display = true;
+    protochart.options.plugins.datalabels.display = true;
+
+    // datalabels solo percentuali
+    protochart.options.plugins.datalabels.formatter = (value, context) => {
+        const data = context.chart.data.datasets[0].data;
+        const total = data.reduce((sum, val) => sum + val, 0);
+        const percentage = ((value / total) * 100).toFixed(0);
+        return `${percentage}%`;
+    };
+
+    protochart.update();
+}
+
+//WebSocket
 socket.on("packet_log_listener", (data) => {
-    // Nuovo dato che vuoi aggiungere
     let newData = Object.keys(data).map(key => data[key]);
-    // Aggiungi riga
     table.row.add(newData).draw(false); 
 
 });
 
 socket.on("ip_log_listener", (data) => {
-    //console.log("Traffico generato per IP:", data);
     traffic_by_ip = data;
 
     let newLabels = []
@@ -35,7 +80,6 @@ socket.on("ip_log_listener", (data) => {
     const normalizedData = newData.map(v => v/1024);
     console.log(newLabels)
     ipchart.data.labels = newLabels
-    //ipchart.data.label = Object.keys(traffic_by_ip);
     ipchart.data.datasets[0].data = normalizedData;
     ipchart.update();
 
@@ -44,22 +88,18 @@ socket.on("ip_log_listener", (data) => {
 socket.on("protocol_traffic_listener", (data) => {
     traffic_by_protocol = data;
     aggiornaGrafico(traffic_by_protocol, colors, bordercolors)
-    //protochart.data.labels = Object.keys(traffic_by_protocol);
-    //protochart.data.datasets[0].data = Object.values(traffic_by_protocol);
-    //protochart.update();
 });
 
 socket.on('security_alert_notifier', (data) => {
-    let alert_message = document.getElementById('alert-box').querySelector('span');
-    alert_message.innerHTML = data;
+    showAlert(data);
 });
 
 socket.on("io_traffic_listener", (data) => {
     io_traffic = data;
     for(const key in data){
         iodatasets[key] = Object.entries(io_traffic[key]).map(([k, v]) => ({
-        x: parseFloat(k), // chiave come numero
-        y: v              // valore
+        x: parseFloat(k), 
+        y: v              
         }));
     }
 
@@ -87,30 +127,25 @@ socket.on("io_traffic_listener", (data) => {
 });
 
 
-Chart.defaults.font.family = "'Roboto Condensed', sans-serif"; // font globale
-Chart.defaults.font.size = 14; // dimensione in px
-//Chart.defaults.font.style = 'bold'; // stile: normal, bold, italic
-Chart.defaults.color = '#333'; // colore testo globale
-
-bordercolors = ['#84A98C', '#52796F', '#354F52', '#2F3E46', '#CAD2C5']
-colors = ['#84a98c94', '#52796f86', '#354f5291', '#2f3e468f', '#cad2c5c7']
-const ipchartEl = document.getElementById('ipchart').getContext('2d');
-const iochartEl = document.getElementById('iochart').getContext('2d');
-const protochartEl = document.getElementById('protochart').getContext('2d');
-
+//Grafici
 const ipchart = new Chart(ipchartEl, {
     type: 'bar',
     data: {
-        labels: ['N/D', 'N/D', 'N/D', 'N/D', 'N/D'], // etichette sull'asse X
+        labels: ['N/D', 'N/D', 'N/D', 'N/D', 'N/D'], 
         datasets: [{
-            label: "Valori",
-            data: [0,0,0,0,0], // valori sull'asse Y
+            label: null,
+            data: [0,0,0,0,0], 
             backgroundColor: colors,
             borderColor: bordercolors,
             borderWidth: 1
         }]
     },
     options: {
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
         responsive: false,
         scales: {
         x: {
@@ -131,7 +166,7 @@ const iochart = new Chart(iochartEl, {
             label: "OUT",
             data: io_traffic["out"],
             borderColor: colors[3],
-            borderWidth: 3,   // linea più spessa
+            borderWidth: 3,   
             fill: false,
             tension: 0.2,
             pointRadius: 0,
@@ -153,7 +188,7 @@ const iochart = new Chart(iochartEl, {
             legend: {
                 position: 'top',
                 labels: {
-                    usePointStyle: false, // fa vedere la linea
+                    usePointStyle: false, 
                     boxWidth: 40,
                     boxHeight: 2
                 }
@@ -179,61 +214,39 @@ const iochart = new Chart(iochartEl, {
     }
 });
 
-function aggiornaGrafico(dati, colori, bordi) {
-    protochart.data.labels = Object.keys(dati);
-    protochart.data.datasets[0].data = Object.values(dati);
-    protochart.data.datasets[0].backgroundColor = colori;
-    protochart.data.datasets[0].borderColor = bordi;
-
-    // mostra legenda e datalabels
-    protochart.options.plugins.legend.display = true;
-    protochart.options.plugins.datalabels.display = true;
-
-    // datalabels solo percentuali
-    protochart.options.plugins.datalabels.formatter = (value, context) => {
-        const data = context.chart.data.datasets[0].data;
-        const total = data.reduce((sum, val) => sum + val, 0);
-        const percentage = ((value / total) * 100).toFixed(0);
-        return `${percentage}%`;
-    };
-
-    protochart.update();
-}
-
 
 // inizializzazione grafico "vuoto"
 const protochart = new Chart(protochartEl, {
-    type: 'pie',
-    data: {
-        labels: [], // nessuna etichetta all'inizio
-        datasets: [{
-            label: 'Traffico (byte)',
-            data: [1], // un solo valore per fare un cerchio pieno
-            backgroundColor: colors[0], // colore grigio chiaro
-            borderColor: bordercolors[0],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: false,
-        plugins: {
-            legend: {
-                display: false // nascondiamo la legenda inizialmente
-            },
-            datalabels: {
-                display: false // niente etichette inizialmente
-            }
+type: 'pie',
+data: {
+    labels: [], 
+    datasets: [{
+        label: 'Traffico (byte)',
+        data: [1], 
+        backgroundColor: colors[0], 
+        borderColor: bordercolors[0],
+        borderWidth: 1
+    }]
+},
+options: {
+    responsive: false,
+    plugins: {
+        legend: {
+            display: false 
         },
-        scales: {
-            y: { display: false },
-            x: { display: false }
+        datalabels: {
+            display: false 
         }
     },
-    plugins: [ChartDataLabels]
+    scales: {
+        y: { display: false },
+        x: { display: false }
+    }
+},
+plugins: [ChartDataLabels]
 });
 
-
-
+//Tabella
 let table = $('#myTable').DataTable({
     pageLength: 10,
     order: [[0, 'desc']]

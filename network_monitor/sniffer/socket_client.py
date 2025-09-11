@@ -33,13 +33,6 @@ def connect_with_retry(max_retries=10, delay=2):
 def start_socket():
     connect_with_retry()
 
-
-'''def start_socket():
-    try:
-        sio.connect(f'http://{HOST}:{PORT}')
-    except Exception as e:
-        raise ConnectionRefusedException
-'''
 def close_socket():
     try:
         sio.disconnect()
@@ -65,7 +58,5 @@ def connect():
 def disconnect():
     print("Disconnesso dal server.")
 
-# Connessione al server Node
-#sio.connect("http://localhost:3000")
 
 

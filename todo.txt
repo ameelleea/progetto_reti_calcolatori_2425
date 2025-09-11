@@ -1,0 +1,3 @@
+Valutare modifica sistema di alert 
+Valutare reazione agli attacchi
+Log alert
