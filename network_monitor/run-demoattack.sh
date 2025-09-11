@@ -3,7 +3,7 @@
 # Percorso al venv del progetto
 VENV_PATH="./venv"
 
-# Percorso allo script Python dei demo attacchi
+# Percorso allo script Python degli attacchi demo
 DEMO_SCRIPT="./demo_attack/demo_attack_simulator.py"
 
 # Funzione per attivare il venv
@@ -36,7 +36,7 @@ show_menu() {
     echo "=============================="
 }
 
-# Attivo il venv
+# Attivazione venv
 activate_venv
 
 # Loop menu
