@@ -21,21 +21,18 @@ top_ips = {}
 def get_local_ips():
     local_ips = set()
     
-    # Ottieni hostname della macchina
     hostname = socket.gethostname()
     
-    # Risolvi tutti gli IP associati all'hostname
     try:
         _, _, ip_list = socket.gethostbyname_ex(hostname)
         for ip in ip_list:
             local_ips.add(ip)
     except socket.gaierror:
         pass
-    
-    # Per avere almeno l’IP sulla interfaccia di default (connessione a Internet)
+
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))  # non invia pacchetti
+        s.connect(("8.8.8.8", 80))
         local_ips.add(s.getsockname()[0])
         s.close()
     except Exception:
@@ -48,7 +45,7 @@ local_ips = get_local_ips()
 # --- Funzioni di analisi ---
 def process_ip_packet(packet, start_time):
     # --- IP ---
-    #print(packet.summary())
+    print(packet.summary())
     if IP in packet:
         info = {
             "timestamp": datetime.now().isoformat(),
@@ -95,7 +92,6 @@ def process_ip_packet(packet, start_time):
             sport = packet[UDP].sport
             dport = packet[UDP].dport
             size = len(packet)
-            #print(f"UDP {sport} → {dport} | Size={size}")
             info["sport"] = sport
             info["dport"] = dport
 
@@ -104,7 +100,7 @@ def process_ip_packet(packet, start_time):
             dns_layer = packet[DNS]
             # Query (richiesta)
             if dns_layer.qr == 0:
-                query_name = dns_layer.qd.qname.decode()  # dominio richiesto
+                query_name = dns_layer.qd.qname.decode()
                 info["dnsquery"] = query_name
                 info["dnsquerytype"] = "Query"
             # Risposta
@@ -150,19 +146,5 @@ def update_stats(ip_src, ip_dst, size, proto_name, start_time):
     global top_ips
     top_ips = dict(sorted(traffic.items(), key=lambda x: x[1], reverse=True)[:5])
 
-
-'''
-    if(ip_src == LOCAL_IP):
-        lastkey = next(reversed(traffic_io["out"]))
-        newsize = (traffic_io['out'][lastkey] + size)
-        traffic_io["out"][elapsed] = newsize
-    elif(ip_dst == LOCAL_IP):
-        lastkey = next(reversed(traffic_io["in"]))
-        newsize = (traffic_io['in'][lastkey] + size)
-        traffic_io["in"][elapsed] = newsize
-    else:
-        print("Direction unkown.")
-        # Ignora broadcast/multicast
-'''
 
 

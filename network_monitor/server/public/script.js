@@ -32,12 +32,12 @@ function showAlert(message) {
         alertBox.style.transform = 'translateY(-10px)';
         setTimeout(() => {
             alert_active = false;
-            // Mostra il prossimo alert se ce n'è in coda
+            
             if (alerts_queue.length > 0) {
                 showAlert(alerts_queue.shift());
             }
-        }, 500); // piccola pausa per finire l’animazione
-    }, 5000); // durata visibilità alert
+        }, 500); 
+    }, 5000); 
 }
 
 function aggiornaGrafico(dati, colori, bordi) {
@@ -100,7 +100,7 @@ socket.on("protocol_traffic_listener", (data) => {
 
 socket.on('security_alert_notifier', (data) => {
     alerts_queue.push(data);
-    // Se non c’è alert in corso, mostralo subito
+
     if (!alert_active) {
         showAlert(alerts_queue.shift());
     }
@@ -227,7 +227,7 @@ const iochart = new Chart(iochartEl, {
 });
 
 
-// inizializzazione grafico "vuoto"
+// inizializzazione grafico vuoto
 const protochart = new Chart(protochartEl, {
 type: 'pie',
 data: {

@@ -14,11 +14,9 @@ const io = new Server(server, {
     }
 });
 
-// Quando un client si connette
 io.on('connection', (socket) => {
     console.log('Un client si è connesso:', socket.id);
 
-    // Riceve dati dal Python e li rilancia ai client
     socket.on('packet_log_data', (data) => {
         io.emit('packet_log_listener', data);
     });

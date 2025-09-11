@@ -6,7 +6,6 @@ from .lib.config import HOST, PORT
 
 sio = socketio.Client()
 
-# URL del server Node
 SERVER_URL = f"http://{HOST}:{PORT}"
 
 sio = socketio.Client()
