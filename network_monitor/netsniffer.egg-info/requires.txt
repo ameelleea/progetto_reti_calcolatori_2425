@@ -1,0 +1,4 @@
+scapy
+python-socketio
+requests
+websocket-client

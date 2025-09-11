@@ -13,13 +13,12 @@ def packet_callback(pkt):
         print("Errore: sniffer line 12, ", e)
 
 # --- Avvio sniffer ---
-def start_sniffer():
+def start_sniffer(iface=None):
     global start_time
     start_time = time.time()
-    print("Sniffer avviato.")
+    print(f"Sniffer avviato su interfaccia {iface}.")
 
-    sniff(prn=packet_callback, store=False)
-
+    sniff(prn=packet_callback, store=False, iface=iface)
     print("Sniffer interrupt")
 
 

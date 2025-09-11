@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netsniffer"
+version = "0.1.0"
+description = "Network monitoring sniffer with attack detection"
+authors = [
+    { name = "Amelia", email = "example@email.com" }
+]
+dependencies = [
+    "scapy",
+    "python-socketio",
+    "requests",
+    "websocket-client"
+]
+
+[tool.setuptools.packages.find]
+include = ["sniffer"]
+
+[project.scripts]
+netsniffer = "sniffer.__main__:main"

@@ -1,4 +1,0 @@
-| Tipo              | Cosa mostra                                           | Libreria / Widget suggerito |
-| ----------------- | ----------------------------------------------------- | --------------------------- |
-| Mappa             | Geolocalizzazione IP sorgente/destinazione            | Leaflet.js, Mapbox          |
-| Log eventi        | DNS query e risposte, ICMP, ARP                       | Semplice lista scrollabile  |
