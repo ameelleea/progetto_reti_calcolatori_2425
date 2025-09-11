@@ -7,7 +7,7 @@ name = "netsniffer"
 version = "0.1.0"
 description = "Network monitoring sniffer with attack detection"
 authors = [
-    { name = "Amelia", email = "example@email.com" }
+    { name = "Milena Balducci" }
 ]
 dependencies = [
     "scapy",

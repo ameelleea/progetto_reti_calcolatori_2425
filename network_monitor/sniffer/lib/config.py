@@ -12,9 +12,8 @@ def config_port(port):
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        # connetti a un IP esterno qualsiasi (qui Google DNS)
         s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]  # prende l'IP locale usato per uscire
+        ip = s.getsockname()[0] 
     except Exception:
         ip = "127.0.0.1"  # fallback
     finally:

@@ -10,16 +10,16 @@ def packet_callback(pkt):
         process_ip_packet(pkt, start_time)
         run_security_scan(pkt)
     except Exception as e:
-        print("Errore: sniffer line 12, ", e)
+        print("[NetSniffer] ", e)
 
 # --- Avvio sniffer ---
 def start_sniffer(iface=None):
     global start_time
     start_time = time.time()
-    print(f"Sniffer avviato su interfaccia {iface}.")
+    print(f"[NetSniffer] Sniffer avviato su interfaccia {iface}.")
 
     sniff(prn=packet_callback, store=False, iface=iface)
-    print("Sniffer interrupt")
+    print("[NetSniffer] Sniffer interrupt")
 
 
 

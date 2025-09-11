@@ -1,6 +1,9 @@
 from scapy.all import ARP, IP, TCP, UDP, ICMP, DNS, DNSQR, send
 import time
 import argparse
+from scapy.all import conf
+
+conf.verb = 0  # silenzia warning generali
 
 TARGET_IP = "192.168.1.100"
 TARGET_MAC = "ff:ff:ff:ff:ff:ff"

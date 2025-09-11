@@ -2,12 +2,11 @@ import socketio
 import time
 import sys
 from .lib.config import HOST, PORT
-from .lib.exceptions import ConnectionRefusedException
 
 sio = socketio.Client()
 
 # URL del server Node
-SERVER_URL = f"http://{HOST}:{PORT}"  # usa il nome del servizio Docker
+SERVER_URL = f"http://{HOST}:{PORT}"
 
 # Crea client socketio
 sio = socketio.Client()
@@ -41,10 +40,6 @@ def close_socket():
         pass
 
 def send_traffic_data(dest, data):
-    """
-    dest: evento websocket al quale inviare i dati
-    data: dict con le informazioni da inviare
-    """
     sio.emit(dest, data)
 
 def send_security_alert(dest, message):

@@ -11,4 +11,3 @@ sniffer/analyzer.py
 sniffer/security.py
 sniffer/sniffer.py
 sniffer/socket_client.py
-sniffer/stats.py

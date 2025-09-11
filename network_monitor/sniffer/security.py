@@ -3,19 +3,19 @@ from collections import defaultdict
 import time
 from .socket_client import send_security_alert
 
-TIME_WINDOW = 10  # secondi di finestra temporale per analisi euristiche
+TIME_WINDOW = 10 
 
 # Strutture dati per accumulare traffico
 traffic_stats = {
-    "syn": defaultdict(list),      # ip sorgente → [timestamps SYN]
-    "rst": defaultdict(list),      # ip sorgente → [timestamps RST]
-    "udp": defaultdict(list),      # (src, dst) → [(timestamp, size)]
-    "dns": defaultdict(list),      # ip sorgente → [timestamps DNS query]
-    "generic": defaultdict(list)   # ip destinazione → [(timestamp, sorgente)]
+    "syn": defaultdict(list),      
+    "rst": defaultdict(list),      
+    "udp": defaultdict(list),      
+    "dns": defaultdict(list),      
+    "generic": defaultdict(list)   
 }
 
-arp_table = {}   # IP → MAC per controllo ARP spoofing
-ping_count = {}  # IP sorgente → numero di ping ICMP
+arp_table = {}   
+ping_count = {}  
 
 
 def run_security_scan(pkt):
@@ -34,7 +34,7 @@ def detect_arp_spoof(pkt):
         mac = pkt[ARP].hwsrc
 
         if ip in arp_table and arp_table[ip] != mac:
-            message = f"[!] ARP Spoofing rilevato: {ip} -> {arp_table[ip]} e {mac}"
+            message = f"[ALERT] ARP Spoofing detected: {ip} -> {arp_table[ip]} e {mac}"
             send_security_alert("security_alert_listener", message)
         else:
             arp_table[ip] = mac
@@ -47,7 +47,7 @@ def detect_icmp(pkt):
         ping_count[src] = ping_count.get(src, 0) + 1
 
         if ping_count[src] > 10:
-            message = f"[!] ICMP scan: troppi ping da {src}"
+            message = f"[ALERT] ICMP scan: received too many pings from {src}"
             send_security_alert("security_alert_listener", message)
 
 
@@ -62,7 +62,7 @@ def detect_syn_flood(pkt):
         traffic_stats["syn"][src] = [t for t in traffic_stats["syn"][src] if now - t < TIME_WINDOW]
 
         if len(traffic_stats["syn"][src]) > 50:
-            message = f"[ALERTA] Possibile SYN Flood da {src} ({len(traffic_stats['syn'][src])} SYN in {TIME_WINDOW}s)"
+            message = f"[ALERT] Suspect SYN flood from {src} ({len(traffic_stats['syn'][src])} SYN in {TIME_WINDOW}s)"
             send_security_alert("security_alert_listener", message)
 
 
@@ -76,7 +76,7 @@ def detect_tcp_reset(pkt):
         traffic_stats["rst"][src] = [t for t in traffic_stats["rst"][src] if now - t < TIME_WINDOW]
 
         if len(traffic_stats["rst"][src]) > 20:
-            message = f"[ALERTA] Possibile TCP Reset Attack da {src}"
+            message = f"[ALERT] Possible TCP Reset Attack from {src}"
             send_security_alert("security_alert_listener", message)
 
 
@@ -94,7 +94,7 @@ def detect_udp_amplification(pkt):
         if len(traffic_stats["udp"][(src, dst)]) > 2:
             sizes = [s for _, s in traffic_stats["udp"][(src, dst)]]
             if max(sizes) > 3 * min(sizes):
-                message = f"[ALERTA] Possibile UDP Amplification tra {src} -> {dst} (ratio {max(sizes)}/{min(sizes)})"
+                message = f"[ALERT] Suspect UDP amplification between {src} -> {dst} (ratio {max(sizes)}/{min(sizes)})"
                 send_security_alert("security_alert_listener", message)
 
 
@@ -110,11 +110,11 @@ def detect_dns_tunneling(pkt):
 
         # euristiche di tunneling DNS
         if len(query) > 50 or query.count(".") > 5:
-            message = f"[ALERTA] Possibile DNS Tunneling da {src}, query sospetta: {query}"
+            message = f"[ALERT] Suspect DNS Tunneling from {src}, suspicious query: {query}"
             send_security_alert("security_alert_listener", message)
 
         if len(traffic_stats["dns"][src]) > 30:
-            message = f"[ALERTA] Possibile DNS Tunneling flood da {src} ({len(traffic_stats['dns'][src])} query in {TIME_WINDOW}s)"
+            message = f"[ALERT] Suspect DNS Tunneling flood from {src} ({len(traffic_stats['dns'][src])} query in {TIME_WINDOW}s)"
             send_security_alert("security_alert_listener", message)
 
 
@@ -133,5 +133,5 @@ def detect_ddos(pkt):
         unique_sources = {s for (_, s) in traffic_stats["generic"][dst]}
 
         if len(unique_sources) > 30:
-            message = f"[ALERTA] Possibile DDoS contro {dst} da {len(unique_sources)} sorgenti diverse"
+            message = f"[ALERT] Suspect DDoS on {dst} from {len(unique_sources)} unique sources"
             send_security_alert("security_alert_listener", message)

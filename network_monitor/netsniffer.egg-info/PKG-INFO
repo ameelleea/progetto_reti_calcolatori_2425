@@ -2,7 +2,7 @@ Metadata-Version: 2.4
 Name: netsniffer
 Version: 0.1.0
 Summary: Network monitoring sniffer with attack detection
-Author-email: Amelia <example@email.com>
+Author: Milena Balducci
 Requires-Dist: scapy
 Requires-Dist: python-socketio
 Requires-Dist: requests

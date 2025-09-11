@@ -1,5 +1,4 @@
 import time
-
 from scapy.all import Ether, IP, TCP, UDP
 from scapy.all import DNS
 from datetime import datetime
@@ -20,6 +19,7 @@ top_ips = {}
 def process_ip_packet(packet, start_time):
     # --- Livello di rete ---
     # --- IP ---
+    print(packet.summary())
     if IP in packet:
         info = {
             "timestamp": datetime.now().isoformat(),
@@ -86,8 +86,6 @@ def process_ip_packet(packet, start_time):
                     info["dnsquery"] = answer
 
         send_traffic_data("packet_log_data", info)
-        print(top_ips
-              )
         send_traffic_data("ip_log_data", top_ips)
         send_traffic_data("protocol_traffic_data", traffic_proto)
         send_traffic_data("io_traffic_data", traffic_io)
@@ -102,11 +100,11 @@ def update_stats(ip_src, ip_dst, size, proto_name, start_time):
 
     if(ip_src == LOCAL_IP):
         lastkey = next(reversed(traffic_io["out"]))
-        newsize = (traffic_io['out'][lastkey] + size) / 1024
+        newsize = (traffic_io['out'][lastkey] + size)
         traffic_io["out"][elapsed] = newsize
     elif(ip_dst == LOCAL_IP):
         lastkey = next(reversed(traffic_io["in"]))
-        newsize = (traffic_io['in'][lastkey] + size) / 1024
+        newsize = (traffic_io['in'][lastkey] + size)
         traffic_io["in"][elapsed] = newsize
     else:
         print("Direction unkown.")

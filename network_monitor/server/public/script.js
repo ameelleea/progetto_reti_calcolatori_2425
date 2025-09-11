@@ -77,7 +77,7 @@ socket.on("ip_log_listener", (data) => {
 
     const max = Math.max(...newData);
     console.log(max)
-    const normalizedData = newData.map(v => v/1024);
+    const normalizedData = newData.map(v => v/(1024*1024));
     console.log(newLabels)
     ipchart.data.labels = newLabels
     ipchart.data.datasets[0].data = normalizedData;
@@ -99,7 +99,7 @@ socket.on("io_traffic_listener", (data) => {
     for(const key in data){
         iodatasets[key] = Object.entries(io_traffic[key]).map(([k, v]) => ({
         x: parseFloat(k), 
-        y: v              
+        y: v / (1024*1024)              
         }));
     }
 
@@ -152,7 +152,7 @@ const ipchart = new Chart(ipchartEl, {
             title: { display: true, text: 'Indirizzo IP', font: {weight: 'bold'} }
         },
         y: {
-            title: { display: true, text: 'Traffico (Kb)', font: {weight: 'bold'} }
+            title: { display: true, text: 'Traffico (Mb)', font: {weight: 'bold'} }
         }
     }
 }
@@ -207,7 +207,7 @@ const iochart = new Chart(iochartEl, {
                 }
             },
             y: {
-                title: { display: true, text: 'Traffico (Kb)', font: {weight: 'bold'}}
+                title: { display: true, text: 'Traffico (Mb)', font: {weight: 'bold'}}
             }
             }
         }
