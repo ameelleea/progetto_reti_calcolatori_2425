@@ -9,7 +9,6 @@ sio = socketio.Client()
 # URL del server Node
 SERVER_URL = f"http://{HOST}:{PORT}"
 
-# Crea client socketio
 sio = socketio.Client()
 
 def connect_with_retry(max_retries=10, delay=2):

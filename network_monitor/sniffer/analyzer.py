@@ -47,7 +47,6 @@ local_ips = get_local_ips()
 
 # --- Funzioni di analisi ---
 def process_ip_packet(packet, start_time):
-    # --- Livello di rete ---
     # --- IP ---
     #print(packet.summary())
     if IP in packet:
@@ -83,7 +82,6 @@ def process_ip_packet(packet, start_time):
 
         update_stats(ip_src, ip_dst, size, proto_name, start_time)
 
-        # --- Livello di trasporto ---
         if TCP in packet:
             sport = packet[TCP].sport
             dport = packet[TCP].dport
@@ -101,7 +99,7 @@ def process_ip_packet(packet, start_time):
             info["sport"] = sport
             info["dport"] = dport
 
-        # --- Livello applicazione ---
+
         if packet.haslayer(DNS):
             dns_layer = packet[DNS]
             # Query (richiesta)
