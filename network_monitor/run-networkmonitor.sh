@@ -3,7 +3,7 @@
 set -e
 
 # Config
-INTERFACE="wlp3s0"          # modifica con l'interfaccia principale della tua macchina
+INTERFACE="wlp3s0"
 HOST="localhost"
 PORT=3000
 

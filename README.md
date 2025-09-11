@@ -45,7 +45,17 @@ Launch the sniffer on the local network (requires sudo).
 
 Note: The sniffer requires root privileges to capture packets. The script automatically handles the virtual environment.
 
-### 2. Run Demo Attacks
+### 2. View Web Dashboard
+The network monitor comes complete with a Dashboard that allows the user to see stats and data about traffic on the local network.
+
+Due to time constraint, the dashboard is currently limited to data about IP packets. It will be expanded in the future.
+
+To see the data via the web dashboard, after running the bash script and starting up the node server and netsniffer, open you browser and navigate to
+```http://localhost:300```.
+
+Users can customise the URL by changing the HOST and PORT setting in the ```run-networkmonitor.sh``` script.
+
+### 3. Run Demo Attacks
 
 To launch demo attacks (ARP spoofing, SYN flood, ICMP flood, etc.) separately, use:
 ```bash
@@ -70,7 +80,7 @@ You can also choose “All attacks” to run them sequentially.
 
 Warning: These attacks are simulated and should be executed only on a test network or your local machine.
 
-Repository Structure
+## Repository Structure
 ```bash
 network_monitor/
 ├── run-networkmonitor.sh    # Starts Node server + sniffer
@@ -86,8 +96,8 @@ network_monitor/
 ```
 ### Notes
 
-All Python commands are executed within the virtual environment created by run-networkmonitor.sh.
+All Python commands are executed within the virtual environment created by ```run-networkmonitor.sh```.
 
-The sniffer captures traffic only when run with sudo.
+The sniffer captures traffic only when run with ```sudo```.
 
-Demo attacks send simulated packets to the target machine configured in demo_attack.py.
+Demo attacks send simulated packets to the target machine configured in ```demo_attack.py```.
